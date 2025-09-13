@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 class LoginForm extends StatefulWidget {
   final VoidCallback toggleTheme;
   final ThemeMode currentThemeMode;
-  final TabController tabController; // Accept TabController
+  final TabController tabController;
 
   const LoginForm({
     Key? key,
     required this.toggleTheme,
     required this.currentThemeMode,
-    required this.tabController, // Initialize TabController
+    required this.tabController,
   }) : super(key: key);
 
   @override
@@ -35,7 +35,6 @@ class _LoginFormState extends State<LoginForm> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        // Navigate to home page if successful (AuthGate will handle this)
       } on FirebaseAuthException catch (e) {
         setState(() {
           _errorMessage = e.message;
@@ -112,7 +111,7 @@ class _LoginFormState extends State<LoginForm> {
               ),
               child: const Text('Send Reset Link'),
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
                 if (forgotEmailController.text.isEmpty ||
                     !RegExp(
                       r'^[^@]+@[^@]+\.[^@]+',
@@ -125,7 +124,7 @@ class _LoginFormState extends State<LoginForm> {
                 }
 
                 setState(() {
-                  _isLoading = true; // Show loading indicator on main screen
+                  _isLoading = true;
                 });
 
                 try {
@@ -158,8 +157,7 @@ class _LoginFormState extends State<LoginForm> {
       SnackBar(
         content: Text(message),
         backgroundColor: color,
-        behavior:
-            SnackBarBehavior.floating, // Make it float for better visibility
+        behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(10),
       ),
@@ -185,7 +183,8 @@ class _LoginFormState extends State<LoginForm> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.0),
             ),
-            child: Padding(
+            child: Container(
+              height: 605, // Fixed height to match signup form
               padding: const EdgeInsets.all(24.0),
               child: Form(
                 key: _formKey,
@@ -193,11 +192,9 @@ class _LoginFormState extends State<LoginForm> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // --- App Logo ---
                     Image.asset(
-                      // Changed from Image.network to Image.asset
-                      'assets/images/logo.jpeg', // <--- Your image asset path
-                      height: 80, // You might need to specify height/width
+                      'assets/images/logo.jpeg',
+                      height: 80,
                       width: 80,
                       errorBuilder: (context, error, stackTrace) =>
                           const Icon(Icons.account_balance, size: 80),
@@ -212,7 +209,6 @@ class _LoginFormState extends State<LoginForm> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Login/Signup Toggle
                     Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
@@ -223,9 +219,7 @@ class _LoginFormState extends State<LoginForm> {
                         children: [
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
-                                // Already on Login tab
-                              },
+                              onTap: () {},
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12.0,
@@ -271,9 +265,10 @@ class _LoginFormState extends State<LoginForm> {
                                   child: Text(
                                     'Signup',
                                     style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).textTheme.bodyLarge?.color,
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.color,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                     ),
@@ -409,9 +404,10 @@ class _LoginFormState extends State<LoginForm> {
                         Text(
                           'Not a member?',
                           style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color,
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color,
                           ),
                         ),
                         TextButton(

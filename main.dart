@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart'; // New Import!
 import 'package:myfin/firebase_options.dart';
 import 'package:myfin/pages/auth_gate.dart';
 import 'package:myfin/pages/passwordless_login_page.dart';
-import 'package:myfin/pages/profile_setup_page.dart'; // New Import!
+import 'package:myfin/pages/profile_setup_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:myfin/constants.dart';
 
 // Your existing page imports
 import 'package:myfin/pages/insurance_calculator_page.dart';
@@ -16,7 +19,6 @@ import 'package:myfin/pages/loan_calculator_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Initialize Firestore (no specific code needed here, just ensure the package is imported)
   runApp(const MyApp());
 }
 
@@ -27,8 +29,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode =
-      ThemeMode.light; // Changed to ThemeMode.light for default light theme
+  ThemeMode _themeMode = ThemeMode.light;
 
   void _toggleTheme() {
     setState(() {
@@ -182,7 +183,6 @@ class _MyAppState extends State<MyApp> {
           currentThemeMode: _themeMode,
         ),
         '/profile_setup': (context) => ProfileSetupPage(
-          // New Route!
           toggleTheme: _toggleTheme,
           currentThemeMode: _themeMode,
         ),
@@ -204,10 +204,8 @@ class MyFinHomePage extends StatefulWidget {
 }
 
 class _MyFinHomePageState extends State<MyFinHomePage> {
-  // Add a GlobalKey for the Scaffold to open the drawer from anywhere
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // NEW: A list to define your breadcrumb items
   final List<Map<String, dynamic>> _breadcrumbItems = [
     {'title': 'Dashboard', 'route': '/home'},
     {'title': 'Insurance Calculator', 'route': '/insurance_calculator'},
@@ -219,7 +217,6 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
     },
   ];
 
-  // Modified _navButton to be a breadcrumb item
   Widget _breadcrumbItem(
     BuildContext context,
     String title,
@@ -228,8 +225,7 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
   }) {
     final bool isCurrentRoute = ModalRoute.of(context)?.settings.name == route;
     final textColor = isCurrentRoute
-        ? Theme.of(context)
-              .primaryColor // Highlight current page
+        ? Theme.of(context).primaryColor
         : Theme.of(context).textTheme.bodyMedium?.color;
 
     return Row(
@@ -238,12 +234,11 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
         TextButton(
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-            tapTargetSize:
-                MaterialTapTargetSize.shrinkWrap, // Reduce extra space
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             alignment: Alignment.centerLeft,
           ),
           onPressed: isCurrentRoute
-              ? null // Disable if it's the current page
+              ? null
               : () {
                   Navigator.pushNamed(context, route);
                 },
@@ -293,6 +288,40 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
     );
   }
 
+  // UPDATED: A new function to display the profile dialog.
+  void _showProfileDialog(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      transitionDuration: const Duration(milliseconds: 200),
+      transitionBuilder: (context, a1, a2, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: a1,
+          curve: Curves.easeOut,
+        );
+        return Transform.scale(
+          scale: curvedAnimation.value,
+          child: Opacity(opacity: curvedAnimation.value, child: child),
+        );
+      },
+      pageBuilder: (context, a1, a2) {
+        return Align(
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top:
+                  MediaQuery.of(context).padding.top +
+                  80, // Adjust to be below the app bar
+              right: 20,
+            ),
+            child: ProfileDialog(),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -300,7 +329,7 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
     final isDesktop = screenWidth >= 900;
 
     return Scaffold(
-      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
+      key: _scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         toolbarHeight: isSmallScreen ? 56 : 80,
@@ -313,9 +342,8 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
         title: Row(
           children: [
             Image.asset(
-              // Changed from Image.network to Image.asset
-              'assets/images/logo.jpeg', // <--- Your image asset path
-              height: 40, // You might need to specify height/width
+              'assets/images/logo.jpeg',
+              height: 40,
               width: 40,
               errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.account_balance, size: 80),
@@ -374,27 +402,12 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
             onPressed: widget.toggleTheme,
           ),
           if (isDesktop)
-            TextButton.icon(
-              onPressed: () async {
-                print('Attempting to log out (Desktop button)...');
-                await FirebaseAuth.instance.signOut();
-                if (mounted) {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil('/', (route) => false);
-                }
-                print('Logout process initiated (Desktop button).');
-              },
+            IconButton(
               icon: Icon(
-                Icons.logout,
+                Icons.person,
                 color: Theme.of(context).iconTheme.color,
               ),
-              label: Text(
-                'Logout',
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
+              onPressed: () => _showProfileDialog(context),
             ),
           const SizedBox(width: 16),
         ],
@@ -509,8 +522,7 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.start, // Align breadcrumbs to start
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: _breadcrumbItems.map((item) {
                   final int index = _breadcrumbItems.indexOf(item);
                   return _breadcrumbItem(
@@ -535,7 +547,7 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
                           const Color(0xFF81D4FA),
                         ]
                       : [
-                          const Color(0xFF18002F),
+                          const Color(0xFF1A002F),
                           const Color(0xFF2C2448),
                           const Color(0xFF6966A7),
                         ],
@@ -748,6 +760,222 @@ class _MyFinHomePageState extends State<MyFinHomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// UPDATED: A new widget for the profile pop-up
+class ProfileDialog extends StatefulWidget {
+  @override
+  _ProfileDialogState createState() => _ProfileDialogState();
+}
+
+class _ProfileDialogState extends State<ProfileDialog> {
+  Map<String, dynamic>? _userProfile;
+  String? _errorMessage;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not logged in.');
+      }
+      final String uid = user.uid;
+
+      final String host = AppConstants.backendBaseUrl;
+
+      final response = await http.get(
+        Uri.parse('$host/api/profile/$uid'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _userProfile = jsonDecode(response.body);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage =
+              'Failed to load profile. Status: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An error occurred: ${e.toString()}';
+        _isLoading = false;
+      });
+      print('Error fetching user profile: $e');
+    }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    }
+  }
+
+  // NEW: Navigate to the profile setup page
+  void _editProfile() {
+    if (mounted) {
+      Navigator.of(context).pop(); // Close the dialog
+      Navigator.pushNamed(context, '/profile_setup');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 10,
+        color: Theme.of(context).cardColor,
+        child: Container(
+          width: 350,
+          padding: const EdgeInsets.all(16),
+          child: _isLoading
+              ? const SizedBox(
+                  height: 200,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : _errorMessage != null
+              ? SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Email at the top
+                    Text(
+                      _userProfile!['email_id'] ?? 'N/A',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const Divider(height: 20),
+                    // Profile photo
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      child: Text(
+                        (_userProfile!['first_name'] as String? ?? 'U')[0]
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 40,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Hi, ${_userProfile!['first_name']}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _editProfile,
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('Edit Profile'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
+                              side: BorderSide(
+                                color: Theme.of(context).dividerColor,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ), // Add some space between buttons
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _logout,
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Logout'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   child: OutlinedButton.icon(
+                    //     onPressed: _editProfile,
+                    //     icon: const Icon(Icons.edit_outlined),
+                    //     label: const Text('Edit Profile'),
+                    //     style: OutlinedButton.styleFrom(
+                    //       foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
+                    //       side: BorderSide(color: Theme.of(context).dividerColor),
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(10),
+                    //       ),
+                    //       padding: const EdgeInsets.symmetric(vertical: 12),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
+                    // // Logout button
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   child: ElevatedButton.icon(
+                    //     onPressed: _logout,
+                    //     icon: const Icon(Icons.logout),
+                    //     label: const Text('Logout'),
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: Colors.red,
+                    //       foregroundColor: Colors.white,
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(10),
+                    //       ),
+                    //       padding: const EdgeInsets.symmetric(vertical: 12),
+                    //     ),
+                    //   ),
+                    // ),
+                  ],
+                ),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart'; // To get current user's UID
 import 'package:http/http.dart' as http; // For making HTTP requests to backend
 import 'dart:convert'; // For JSON encoding/decoding
 import 'dart:math'; // For mathematical operations in CustomPainter
+import 'package:myfin/constants.dart'; // NEW: Import your constants file
 
 class InsuranceCalculatorPage extends StatefulWidget {
   const InsuranceCalculatorPage({super.key});
@@ -17,9 +18,11 @@ class _InsuranceCalculatorPageState extends State<InsuranceCalculatorPage> {
   bool _isLoadingProfile = true; // New state to manage profile loading
   bool _isSavingCalculation = false; // New state for saving calculation
 
-  // Define your backend API URL
-  final String _backendBaseUrl =
-      'http://localhost:3000'; // IMPORTANT: Replace with your actual Node.js backend port
+  // // Define your backend API URL
+  // final String _backendBaseUrl =
+  //     'http://localhost:3000'; // IMPORTANT: Replace with your actual Node.js backend port
+  // Use the new constant for the backend URL
+  final String _backendBaseUrl = AppConstants.backendBaseUrl;
 
   // --- Breadcrumb Items for this page ---
   final List<Map<String, dynamic>> _breadcrumbItems = [
@@ -133,91 +136,98 @@ class _InsuranceCalculatorPageState extends State<InsuranceCalculatorPage> {
       return;
     }
 
-    try {
-      final response = await http.get(
-        Uri.parse('$_backendBaseUrl/api/profile/${user.uid}'),
-      );
+    //   try {
+    //     final response = await http.get(
+    //       Uri.parse('$_backendBaseUrl/api/profile/${user.uid}'),
+    //     );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        setState(() {
-          // Populate controllers and state variables with fetched data
-          _ageController.text = (data['age'] ?? '').toString();
-          _selectedGender = data['gender'];
-          _annualIncomeController.text = (data['monthly_income'] != null
-              ? (data['monthly_income'] * 12).toStringAsFixed(2)
-              : '');
-          _maritalStatus = data['marital_status'];
-          _numChildrenController.text = (data['dependents'] ?? '').toString();
-          _occupationController.text = data['occupation'] ?? '';
-          _heightController.text = (data['height_cm'] ?? '').toString();
-          _weightController.text = (data['weight_kg'] ?? '').toString();
-          _locationController.text = data['location'] ?? '';
-          _smokingHabit = data['smoking_habit'];
-          _drinkingHabit = data['drinking_habit'];
-          // For single select, pick the first if available, else null
-          _selectedMedicalCondition =
-              (data['medical_history'] as List?)?.isNotEmpty == true
-              ? data['medical_history'][0]
-              : null;
-          _selectedFamilyMedicalCondition =
-              (data['family_medical_history'] as List?)?.isNotEmpty == true
-              ? data['family_medical_history'][0]
-              : null;
-          _currentMedicationsController.text =
-              data['current_medications'] ?? '';
-          _exerciseFrequency = data['exercise_frequency'];
+    //     if (response.statusCode == 200) {
+    //       final Map<String, dynamic> data = json.decode(response.body);
+    //       setState(() {
+    //         // Populate controllers and state variables with fetched data
+    //         _ageController.text = (data['age'] ?? '').toString();
+    //         _selectedGender = data['gender'];
+    //         _annualIncomeController.text = (data['monthly_income'] != null
+    //             ? (data['monthly_income'] * 12).toStringAsFixed(2)
+    //             : '');
+    //         _maritalStatus = data['marital_status'];
+    //         _numChildrenController.text = (data['dependents'] ?? '').toString();
+    //         _occupationController.text = data['occupation'] ?? '';
+    //         _heightController.text = (data['height_cm'] ?? '').toString();
+    //         _weightController.text = (data['weight_kg'] ?? '').toString();
+    //         _locationController.text = data['location'] ?? '';
+    //         _smokingHabit = data['smoking_habit'];
+    //         _drinkingHabit = data['drinking_habit'];
+    //         // For single select, pick the first if available, else null
+    //         _selectedMedicalCondition =
+    //             (data['medical_history'] as List?)?.isNotEmpty == true
+    //             ? data['medical_history'][0]
+    //             : null;
+    //         _selectedFamilyMedicalCondition =
+    //             (data['family_medical_history'] as List?)?.isNotEmpty == true
+    //             ? data['family_medical_history'][0]
+    //             : null;
+    //         _currentMedicationsController.text =
+    //             data['current_medications'] ?? '';
+    //         _exerciseFrequency = data['exercise_frequency'];
 
-          _existingLifeInsuranceController.text =
-              (data['existing_insurance'] != null &&
-                          data['existing_insurance'] != 'None'
-                      ? _extractAmountFromInsuranceString(
-                          data['existing_insurance'],
-                        )
-                      : 0.0)
-                  .toStringAsFixed(2);
-          _policyType = data['policy_type'];
-          _selectedInvestmentGoal =
-              (data['investment_goals'] as List?)?.isNotEmpty == true
-              ? data['investment_goals'][0]
-              : null;
-          _debtsController.text =
-              (data['existing_loans'] != null &&
-                          data['existing_loans'] != 'None'
-                      ? _extractAmountFromLoansString(data['existing_loans'])
-                      : 0.0)
-                  .toStringAsFixed(2);
-          _savingsController.text =
-              (data['existing_savings_investments'] is num
-                      ? (data['existing_savings_investments'] as num).toDouble()
-                      : 0.0)
-                  .toStringAsFixed(2);
+    //         _existingLifeInsuranceController.text =
+    //             (data['existing_insurance'] != null &&
+    //                         data['existing_insurance'] != 'None'
+    //                     ? _extractAmountFromInsuranceString(
+    //                         data['existing_insurance'],
+    //                       )
+    //                     : 0.0)
+    //                 .toStringAsFixed(2);
+    //         _policyType = data['policy_type'];
+    //         _selectedInvestmentGoal =
+    //             (data['investment_goals'] as List?)?.isNotEmpty == true
+    //             ? data['investment_goals'][0]
+    //             : null;
+    //         _debtsController.text =
+    //             (data['existing_loans'] != null &&
+    //                         data['existing_loans'] != 'None'
+    //                     ? _extractAmountFromLoansString(data['existing_loans'])
+    //                     : 0.0)
+    //                 .toStringAsFixed(2);
+    //         _savingsController.text =
+    //             (data['existing_savings_investments'] is num
+    //                     ? (data['existing_savings_investments'] as num).toDouble()
+    //                     : 0.0)
+    //                 .toStringAsFixed(2);
 
-          _isLoadingProfile = false;
-          // Calculate BMI if height and weight are available
-          _calculateBMI();
-        });
-      } else if (response.statusCode == 404) {
-        setState(() {
-          _isLoadingProfile = false;
-          _profileFetchError =
-              'Profile not found. Please complete your profile setup.';
-        });
-      } else {
-        setState(() {
-          _isLoadingProfile = false;
-          _profileFetchError = 'Failed to load profile: ${response.statusCode}';
-        });
-        print('Backend error: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoadingProfile = false;
-        _profileFetchError =
-            'Network error: ${e.toString()}. Is backend running?';
-      });
-      print('Network error fetching profile: $e');
-    }
+    //         _isLoadingProfile = false;
+    //         // Calculate BMI if height and weight are available
+    //         _calculateBMI();
+    //       });
+    //     } else if (response.statusCode == 404) {
+    //       setState(() {
+    //         _isLoadingProfile = false;
+    //         _profileFetchError =
+    //             'Profile not found. Please complete your profile setup.';
+    //       });
+    //     } else {
+    //       setState(() {
+    //         _isLoadingProfile = false;
+    //         _profileFetchError = 'Failed to load profile: ${response.statusCode}';
+    //       });
+    //       print('Backend error: ${response.statusCode} - ${response.body}');
+    //     }
+    //   } catch (e) {
+    //     setState(() {
+    //       _isLoadingProfile = false;
+    //       _profileFetchError =
+    //           'Network error: ${e.toString()}. Is backend running?';
+    //     });
+    //     print('Network error fetching profile: $e');
+    //   }
+    // }
+    // ADD THIS:
+    setState(() {
+      _isLoadingProfile = false;
+      _profileFetchError = null;
+      // Leave all field values as manually blank.
+    });
   }
 
   // Helper to extract numeric amount from existing_insurance string
@@ -1325,12 +1335,7 @@ class _InsuranceCalculatorPageState extends State<InsuranceCalculatorPage> {
                           child: _dropdownWithLabel(
                             'Gender',
                             _selectedGender,
-                            [
-                              'Male',
-                              'Female',
-                              'Other',
-                              'Prefer not to say',
-                            ],
+                            ['Male', 'Female', 'Other', 'Prefer not to say'],
                             (val) {
                               setState(() {
                                 _selectedGender = val;

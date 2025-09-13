@@ -42,6 +42,7 @@ dependencies:
   # cloud_firestore: ^4.17.0 # If uncommented, make sure it's here
   image_picker: ^1.1.2 
   http: ^1.2.1 #  Add this line
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

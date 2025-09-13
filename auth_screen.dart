@@ -38,7 +38,7 @@ class _AuthScreenState extends State<AuthScreen>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent, // Transparent AppBar background
-        elevation: 0, // No shadow for the AppBar
+        elevation: 0,// No shadow for the AppBar
         actions: [
           IconButton(
             icon: Icon(
@@ -92,7 +92,7 @@ class _AuthScreenState extends State<AuthScreen>
               Padding(
                 padding: const EdgeInsets.only(
                   bottom:
-                      24.0, // Restored to 24.0 for better spacing and to avoid negative padding issues
+                      114.0, // Restored to 24.0 for better spacing and to avoid negative padding issues
                   top: 24.0,
                 ),
                 child: TextButton(

@@ -9,6 +9,7 @@ import 'package:myfin/pages/profile_setup_page.dart';
 import 'package:http/http.dart'
     as http; // NEW: Import http for network requests
 import 'dart:convert'; // NEW: For JSON encoding/decoding
+import 'package:myfin/constants.dart';
 
 class AuthGate extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -28,10 +29,10 @@ class _AuthGateState extends State<AuthGate> {
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
-  // Define your backend API URL
-  // IMPORTANT: Replace 3000 with the actual port your Node.js backend is running on
-  final String _backendBaseUrl = 'http://localhost:3000';
-
+  // // Define your backend API URL
+  // // IMPORTANT: Replace 3000 with the actual port your Node.js backend is running on
+  // final String _backendBaseUrl = 'http://localhost:3000';
+  final String _backendBaseUrl = AppConstants.backendBaseUrl;
   @override
   void initState() {
     super.initState();
